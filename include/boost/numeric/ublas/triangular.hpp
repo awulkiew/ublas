@@ -173,13 +173,11 @@ namespace boost { namespace numeric { namespace ublas {
         reference operator () (size_type i, size_type j) {
             BOOST_UBLAS_CHECK (i < size1_, bad_index ());
             BOOST_UBLAS_CHECK (j < size2_, bad_index ());
-            if (triangular_type::other (i, j))
-                return data () [triangular_type::element (layout_type (), i, size1_, j, size2_)];
-            else {
+            if (!triangular_type::other (i, j)) {
                 bad_index ().raise ();
-                // arbitary return value
-                return const_cast<reference>(zero_);
+                // NEVER reached
             }
+            return data () [triangular_type::element (layout_type (), i, size1_, j, size2_)];
         }
         
         // Element assignment
@@ -297,25 +295,33 @@ namespace boost { namespace numeric { namespace ublas {
         BOOST_UBLAS_INLINE
         const_iterator1 find1 (int rank, size_type i, size_type j) const {
             if (rank == 1)
-                i = triangular_type::restrict1 (i, j);
+                i = triangular_type::restrict1 (i, j, size1_, size2_);
+	    if (rank == 0)
+		i = triangular_type::global_restrict1 (i, size1_, j, size2_);
             return const_iterator1 (*this, i, j);
         }
         BOOST_UBLAS_INLINE
         iterator1 find1 (int rank, size_type i, size_type j) {
             if (rank == 1)
-                i = triangular_type::mutable_restrict1 (i, j);
+                i = triangular_type::mutable_restrict1 (i, j, size1_, size2_);
+	    if (rank == 0)
+		i = triangular_type::global_mutable_restrict1 (i, size1_, j, size2_);
             return iterator1 (*this, i, j);
         }
         BOOST_UBLAS_INLINE
         const_iterator2 find2 (int rank, size_type i, size_type j) const {
             if (rank == 1)
-                j = triangular_type::restrict2 (i, j);
+                j = triangular_type::restrict2 (i, j, size1_, size2_);
+	    if (rank == 0)
+		j = triangular_type::global_restrict2 (i, size1_, j, size2_);
             return const_iterator2 (*this, i, j);
         }
         BOOST_UBLAS_INLINE
         iterator2 find2 (int rank, size_type i, size_type j) {
             if (rank == 1)
-                j = triangular_type::mutable_restrict2 (i, j);
+                j = triangular_type::mutable_restrict2 (i, j, size1_, size2_);
+	    if (rank == 0)
+		j = triangular_type::global_mutable_restrict2 (i, size1_, j, size2_);
             return iterator2 (*this, i, j);
         }
 
@@ -1019,34 +1025,22 @@ namespace boost { namespace numeric { namespace ublas {
         reference operator () (size_type i, size_type j) {
             BOOST_UBLAS_CHECK (i < size1 (), bad_index ());
             BOOST_UBLAS_CHECK (j < size2 (), bad_index ());
-            if (triangular_type::other (i, j))
-                return data () (i, j);
-            else if (triangular_type::one (i, j)) {
+            if (!triangular_type::other (i, j)) {
                 bad_index ().raise ();
-                // arbitary return value
-                return const_cast<reference>(one_);
-            } else {
-                bad_index ().raise ();
-                // arbitary return value
-                return const_cast<reference>(zero_);
+                // NEVER reached
             }
+            return data () (i, j);
         }
 #else
         BOOST_UBLAS_INLINE
         reference operator () (size_type i, size_type j) const {
             BOOST_UBLAS_CHECK (i < size1 (), bad_index ());
             BOOST_UBLAS_CHECK (j < size2 (), bad_index ());
-            if (triangular_type::other (i, j))
-                return data () (i, j);
-            else if (triangular_type::one (i, j)) {
+            if (!triangular_type::other (i, j)) {
                 bad_index ().raise ();
-                // arbitary return value
-                return const_cast<reference>(one_);
-            } else {
-                bad_index ().raise ();
-                // arbitary return value
-                return const_cast<reference>(zero_);
+                // NEVER reached
             }
+            return data () (i, j);
         }
 #endif
 
@@ -1159,26 +1153,34 @@ namespace boost { namespace numeric { namespace ublas {
         BOOST_UBLAS_INLINE
         const_iterator1 find1 (int rank, size_type i, size_type j) const {
             if (rank == 1)
-                i = triangular_type::restrict1 (i, j);
-            return const_iterator1 (*this, data ().find1 (rank, i, j));
+		i = triangular_type::restrict1 (i, j, size1(), size2());
+	    if (rank == 0)
+		i = triangular_type::global_restrict1 (i, size1(), j, size2());
+	    return const_iterator1 (*this, data ().find1 (rank, i, j));
         }
         BOOST_UBLAS_INLINE
         iterator1 find1 (int rank, size_type i, size_type j) {
             if (rank == 1)
-                i = triangular_type::mutable_restrict1 (i, j);
-            return iterator1 (*this, data ().find1 (rank, i, j));
+                i = triangular_type::mutable_restrict1 (i, j, size1(), size2());
+	    if (rank == 0)
+		i = triangular_type::global_mutable_restrict1 (i, size1(), j, size2());
+	    return iterator1 (*this, data ().find1 (rank, i, j));
         }
         BOOST_UBLAS_INLINE
         const_iterator2 find2 (int rank, size_type i, size_type j) const {
             if (rank == 1)
-                j = triangular_type::restrict2 (i, j);
-            return const_iterator2 (*this, data ().find2 (rank, i, j));
+                j = triangular_type::restrict2 (i, j, size1(), size2());
+	    if (rank == 0)
+		j = triangular_type::global_restrict2 (i, size1(), j, size2());
+	    return const_iterator2 (*this, data ().find2 (rank, i, j));
         }
         BOOST_UBLAS_INLINE
         iterator2 find2 (int rank, size_type i, size_type j) {
             if (rank == 1)
-                j = triangular_type::mutable_restrict2 (i, j);
-            return iterator2 (*this, data ().find2 (rank, i, j));
+                j = triangular_type::mutable_restrict2 (i, j, size1(), size2());
+	    if (rank == 0)
+		j = triangular_type::global_mutable_restrict2 (i, size1(), j, size2());
+	    return iterator2 (*this, data ().find2 (rank, i, j));
         }
 
         // Iterators simply are indices.
